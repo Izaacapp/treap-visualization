@@ -232,13 +232,12 @@ function setTree(tree) {
     const zoomY = canvasHeight / treeHeight;
     panZoom.scale = Math.min(zoomX, zoomY) * 0.9; // Slightly reduce zoom for padding
 
-    // Center the tree
-    const canvasCenterX = canvasWidth / 2;
-    const canvasCenterY = canvasHeight / 2;
-    if (root) {
-        panZoom.x = canvasCenterX - root.x * panZoom.scale;
-        panZoom.y = canvasCenterY - root.y * panZoom.scale;
-    }
+    // Adjust panZoom to keep the entire tree within the canvas frame
+    const offsetX = (canvasWidth - treeWidth * panZoom.scale) / 2;
+    const offsetY = (canvasHeight - treeHeight * panZoom.scale) / 2;
+
+    panZoom.x = -boundingBox.minX * panZoom.scale + offsetX;
+    panZoom.y = -boundingBox.minY * panZoom.scale + offsetY;
 
     panZoom.apply();
     space = _space;
