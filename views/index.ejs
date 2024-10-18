@@ -2,15 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     <title>Treap</title>
     <link rel='stylesheet' href='/static/index-style.css'/>
     <link rel="icon" type="image/svg" href="/static/favicon.svg">
     <style>
-        /* Add styles to make the canvas responsive and center it */
+        /* Refine styles to fix positioning and blurriness */
         .canvas-container {
             position: relative;
             width: 100%;
@@ -23,8 +22,28 @@
         }
 
         canvas {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%; /* Let it expand within its container */
+            height: 100%; /* Let it expand within its container */
+            box-sizing: border-box;
+        }
+
+        /* Added to ensure buttons remain well-placed and responsive */
+        button[id="increase-size"],
+        button[id="decrease-size"] {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 35px;
+        }
+
+        button[id="decrease-size"] {
+            left: 60px !important;
         }
     </style>
 </head>
