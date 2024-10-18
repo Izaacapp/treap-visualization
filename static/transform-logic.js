@@ -1,3 +1,11 @@
+import {GeometryCircle, GeometryLine, GeometrySpace, GeometryText} from "./geometry-logic.js";
+
+const RADIUS = 100;
+
+function get_margin(w) {
+    return w / 10;
+}
+
 function _tree_to_space(tree) {
     if (tree == null) {
         return [new GeometrySpace(0, 0), null];
@@ -39,4 +47,13 @@ function _tree_to_space(tree) {
     }
 
     return [space, vertex];
+}
+
+export function tree_to_space(tree) {
+    let [space, root] = _tree_to_space(tree);
+
+    let priorities = {"circle": 1, "line": 0, "text": 1};
+    space.content.sort((a, b) => priorities[a.g_type] - priorities[b.g_type]);
+
+    return [space, root];
 }
