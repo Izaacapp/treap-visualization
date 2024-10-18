@@ -2,13 +2,79 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <title>Treap</title>
+    <title>Treap Visualization</title>
     <link rel='stylesheet' href='/static/index-style.css'/>
     <link rel="icon" type="image/svg" href="/static/favicon.svg">
+
+    <style>
+        /* Update styles to improve canvas clarity and centering */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            font-family: monospace;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .side {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            border: 1px solid black;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        button[id="increase-size"],
+        button[id="decrease-size"] {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            text-align: center;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        button[id="decrease-size"] {
+            left: 60px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <!-- Updated header section with symmetrical styling -->
@@ -34,7 +100,7 @@
 
         <!-- Canvas section for the treap visualization -->
         <div class="canvas-container">
-            <canvas id="canvas" height="2009" width="3009"></canvas>
+            <canvas id="canvas" width="1500" height="1000"></canvas>
             <button id="increase-size">&plus;</button>
             <button id="decrease-size">&minus;</button>
         </div>
