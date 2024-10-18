@@ -4,17 +4,36 @@ body {
     align-items: center;
     gap: 10px;
     font-family: sans-serif;
-
     padding: 20px;
-
+    line-height: 1.6;
 }
 
 .item {
     font-size: min(3rem, 5vw);
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
 a {
     color: #00B7FF;
     text-decoration: none;
     font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.name-section {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 40px;
+}
+
+p {
+    margin: 5px 0;
+    text-align: left;
+}
+
+p strong {
+    font-weight: bold;
+    color: #2c3e50;
 }
