@@ -45,6 +45,21 @@ export function insert(root, val, power = Math.floor(Math.random() * 1000)) {
     return merge(merge(left, new Node(val, power)), right);
 }
 
+export function delete_node(root, val) {
+    if (root == null) {
+        return null;
+    }
+
+    if (val < root.value) {
+        root.left = delete_node(root.left, val);
+    } else if (val > root.value) {
+        root.right = delete_node(root.right, val);
+    } else {
+        // Node found, merge its children to replace it
+        root = merge(root.left, root.right);
+    }
+    return root;
+}
 
 export function random_tree_with_n_nodes(n) {
     let root = null;
