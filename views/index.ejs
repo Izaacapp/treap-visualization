@@ -11,12 +11,16 @@
     <link rel="icon" type="image/svg" href="/static/favicon.svg">
 </head>
 <body>
-    <span class="header">Treap Visualization aka Cartesian tree</span>
-        <a href="/names">List of all names</a>
-    </span>
+    <!-- Updated header section with symmetrical styling -->
+    <span class="header">Treap Visualization</span>
+    <span class="subheader">(Cartesian tree)</span>
+
+    <!-- Link to names list -->
+    <a href="/names">List of all names</a>
 
     <div class="main">
 
+        <!-- Side section for user input -->
         <div class="side">
             <label for="user-data">Value & Priority
                 <button id="show-popup">?</button>
@@ -28,6 +32,7 @@
             <button id="set-random">GENERATE RANDOM TREAP</button>
         </div>
 
+        <!-- Canvas section for the treap visualization -->
         <div class="canvas-container">
             <canvas id="canvas" height="2009" width="3009"></canvas>
             <button id="increase-size">&plus;</button>
@@ -36,6 +41,7 @@
 
     </div>
 
+    <!-- Rules popup modal -->
     <div id="rules-popup">
         <div>
             <span>Enter Value-Priority pairs in the text area.</span>
