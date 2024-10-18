@@ -218,10 +218,15 @@ requestAnimationFrame(() => update(true));
 
 function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
+    
+    // Center the tree
+    const canvasCenterX = canvas.width / 2;
+    const canvasCenterY = canvas.height / 2;
+
     if (root) {
-        panZoom.x = canvas.width / 2 - root.x;
+        panZoom.x = canvasCenterX - root.x * panZoom.scale;
+        panZoom.y = canvasCenterY - root.y * panZoom.scale;
     }
-    panZoom.y = 0;
 
     // Determine zoom level based on number of nodes in the tree
     const nodeCount = countNodes(tree);
@@ -230,11 +235,11 @@ function setTree(tree) {
 
     // Adjust zoom based on node count
     if (nodeCount > 50) {
-        calculatedZoom = 0.5; // Zoom out more for larger trees
+        calculatedZoom = 0.4; // Zoom out more for larger trees
     } else if (nodeCount > 100) {
-        calculatedZoom = 0.3;
+        calculatedZoom = 0.2;
     } else if (nodeCount > 200) {
-        calculatedZoom = 0.2; // Keep zooming out for large node counts
+        calculatedZoom = 0.1; // Keep zooming out for large node counts
     }
 
     panZoom.scale = calculatedZoom; // Set the calculated zoom level
