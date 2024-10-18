@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Treap</title>
+    <link rel='stylesheet' href='/static/index-style.css'/>
+    <link rel="icon" type="image/svg" href="/static/favicon.svg">
+</head>
+<body>
+    <span class="header">Treap Visualization aka Пиво
+        <a href="/names">List of all names</a>
+    </span>
+
+    <div class="main">
+
+        <div class="side">
+            <label for="user-data">Value & Priority
+                <button id="show-popup">?</button>
+            </label>
+            <textarea id="user-data" rows="15" cols="15"></textarea>
+
+            <button id="set-user-data">APPLY</button>
+            <button id="set-random">GENERATE RANDOM TREAP</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas" height="2009" width="3009"></canvas>
+            <button id="increase-size">&plus;</button>
+            <button id="decrease-size">&minus;</button>
+        </div>
+
+    </div>
+
+    <div id="rules-popup">
+        <div>
+            <span>Enter Value-Priority pairs in the text area.</span>
+            <span>Priorities are not required.</span>
+            <span>Each pair is separated by a new line.</span>
+            <span>Value and Priority must be separated by a space.</span>
+            <span>Example:</span>
+            <pre>
+1 2
+3 4
+5
+
+6
+7 9999
+            </pre>
+        </div>
+        <button id="close-popup">✕</button>
+    </div>
+
+    <script type="module" src="/static/interactive.js"></script>
+</body>
+</html>

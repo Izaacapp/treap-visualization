@@ -1,0 +1,166 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+
+    padding: 20px;
+    font-family: monospace;
+}
+
+a {
+    color: #00B7FF;
+    text-decoration: none;
+}
+
+.header {
+    font-size: 2rem;
+}
+
+.main {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+}
+
+@media (width < 1000px) {
+    .main {
+        flex-direction: column;
+    }
+}
+
+.side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 20rem;
+}
+
+textarea[id="user-data"] {
+    width: 100%;
+}
+
+label[for="user-data"] {
+    font-size: 1.5rem;
+}
+
+textarea[id="user-data"] {
+    resize: none;
+}
+
+button[id="set-random"],
+button[id="set-user-data"] {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    width: 100%;
+}
+
+button[id="set-random"]:hover,
+button[id="set-user-data"]:hover {
+    background-color: #3e8e41;
+}
+
+div[class="canvas-container"] {
+    position: relative;
+    border: black 1px solid;
+    width: 100%;
+    height: 80vh;
+}
+
+canvas[id="canvas"] {
+    width: 100%;
+    height: min(100%, 100vh);
+}
+
+button[id="increase-size"],
+button[id="decrease-size"] {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    width: 40px;
+    height: 40px;
+
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    text-align: center;
+    font-size: 35px;
+}
+
+button[id="decrease-size"] {
+    left: 60px !important;
+}
+
+button[id="show-popup"] {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+
+    background-color: transparent;
+    border: 1px solid black;
+    font-size: inherit;
+
+    display: inline;
+    alignment-baseline: top;
+}
+
+div[id="rules-popup"] {
+    display: none;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+
+    background-color: rgba(0, 0, 0, 0.5);
+
+    align-items: center;
+    justify-items: center;
+}
+
+div[id="rules-popup"] > div {
+    background-color: white;
+    border: 2px solid black;
+    padding: 15px 32px;
+    display: grid;
+}
+
+div[id="rules-popup"] > div > span {
+    font-size: 1.5rem;
+    line-height: 1.5;
+}
+
+div[id="rules-popup"] > div > pre {
+    background-color: #f0f0f0;
+    padding: 0.5rem;
+    margin-left: 40px;
+    width: 5rem;
+
+    font-size: 1.2rem;
+    font-family: monospace;
+}
+
+button[id="close-popup"] {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+
+    background-color: white;
+    border: none;
+    color: black;
+    font-size: 1.5rem;
+    width: 2.5rem;
+    aspect-ratio: 1;
+
+    z-index: 10;
+}
