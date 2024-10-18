@@ -1,6 +1,6 @@
-import {random_tree_with_n_nodes, tree_by_keys_and_values, delete_node} from "./decart-logic.js";
-import {tree_to_space} from "./transform-logic.js";
-import {GeometrySpace} from "./geometry-logic.js";
+import { random_tree_with_n_nodes, tree_by_keys_and_values, delete_node } from "./decart-logic.js";
+import { tree_to_space } from "./transform-logic.js";
+import { GeometrySpace } from "./geometry-logic.js";
 
 const SPEED_FACTOR = 2.4;
 const DEBUG = false;
@@ -20,11 +20,13 @@ const popup = document.getElementById("rules-popup");
 
 const ctx = canvas.getContext("2d");
 
-let canvasRect = canvas.getBoundingClientRect();
-canvas.width = canvasRect.width * 2;
-canvas.height = canvasRect.height * 2;
-
 let currentTree = random_tree_with_n_nodes(10); // Track current tree globally
+
+function updateCanvasSize() {
+    canvas.width = canvas.clientWidth * 2;
+    canvas.height = canvas.clientHeight * 2;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformations before reapplying
+}
 
 function extractScreenPos(event) {
     let t = event.touches[0];
@@ -129,7 +131,6 @@ const panZoom = {
     },
 
     scaleAt(x, y, sc) {
-        // x & y are screen coords, not world
         this.scale *= sc;
         x *= 2;
         y *= 2;
@@ -138,70 +139,59 @@ const panZoom = {
     },
 
     toWorld(x, y) {
-        // converts from screen coords to world coords
         const inv = 1 / this.scale;
         return {
             x: (x - this.x) * inv,
             y: (y - this.y) * inv,
         };
     },
+
+    centerToContent(contentWidth, contentHeight) {
+        this.x = (canvas.width - contentWidth * this.scale) / 2;
+        this.y = (canvas.height - contentHeight * this.scale) / 2;
+    },
 };
 
 let space = new GeometrySpace(0, 0);
 
 function draw_everything(thick_mode = false) {
-    {
-        // clear canvas
-        ctx.fillStyle = "white";
-        let { x, y } = panZoom.toWorld(0, 0);
-        ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
-    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    let { x, y } = panZoom.toWorld(0, 0);
+    ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
 
-    {
-        // draw tree
-        ctx.fillStyle = "black";
+    ctx.fillStyle = "black";
 
-        if (thick_mode) {
-            ctx.lineWidth = 100;
-            for (let thing of space.content) {
-                if (thing.g_type === "line") {
-                    ctx.beginPath();
-                    ctx.moveTo(thing.x1, thing.y1);
-                    ctx.lineTo(thing.x2, thing.y2);
-                    ctx.stroke();
-                }
-            }
-        } else {
-            ctx.lineWidth = 15;
-
-            for (let thing of space.content) {
-                if (thing.g_type === "circle") {
-                    ctx.beginPath();
-                    ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                } else if (thing.g_type === "line") {
-                    ctx.beginPath();
-                    ctx.moveTo(thing.sx1, thing.sy1);
-                    ctx.lineTo(thing.sx2, thing.sy2);
-                    ctx.stroke();
-                } else if (thing.g_type === "text") {
-                    ctx.textAlign = thing.align;
-                    ctx.textBaseline = thing.baseline;
-                    ctx.font = `${thing.size}px monospace`;
-                    ctx.fillText(thing.text, thing.x, thing.y);
-                }
+    if (thick_mode) {
+        ctx.lineWidth = 100;
+        for (let thing of space.content) {
+            if (thing.g_type === "line") {
+                ctx.beginPath();
+                ctx.moveTo(thing.x1, thing.y1);
+                ctx.lineTo(thing.x2, thing.y2);
+                ctx.stroke();
             }
         }
-    }
+    } else {
+        ctx.lineWidth = 15;
 
-    if (DEBUG) {
-        // draw axes
-        ctx.beginPath();
-        ctx.moveTo(1000, 0);
-        ctx.lineTo(-1000, 0);
-        ctx.moveTo(0, 1000);
-        ctx.lineTo(0, -1000);
-        ctx.stroke();
+        for (let thing of space.content) {
+            if (thing.g_type === "circle") {
+                ctx.beginPath();
+                ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
+                ctx.stroke();
+            } else if (thing.g_type === "line") {
+                ctx.beginPath();
+                ctx.moveTo(thing.sx1, thing.sy1);
+                ctx.lineTo(thing.sx2, thing.sy2);
+                ctx.stroke();
+            } else if (thing.g_type === "text") {
+                ctx.textAlign = thing.align;
+                ctx.textBaseline = thing.baseline;
+                ctx.font = `${thing.size}px monospace`;
+                ctx.fillText(thing.text, thing.x, thing.y);
+            }
+        }
     }
 }
 
@@ -218,49 +208,18 @@ requestAnimationFrame(() => update(true));
 
 function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
-
-    // Calculate tree dimensions
-    const boundingBox = calculateTreeBoundingBox(_space);
-    const treeWidth = boundingBox.maxX - boundingBox.minX;
-    const treeHeight = boundingBox.maxY - boundingBox.minY;
-
-    // Determine appropriate zoom level to fit the tree within the canvas
-    const canvasWidth = canvas.width / 2;
-    const canvasHeight = canvas.height / 2;
-
-    const zoomX = canvasWidth / treeWidth;
-    const zoomY = canvasHeight / treeHeight;
-    panZoom.scale = Math.min(zoomX, zoomY) * 0.9; // Slightly reduce zoom for padding
-
-    // Center the tree in the canvas
-    const centerX = canvasWidth / 2;
-    const centerY = canvasHeight / 2;
-
-    // Adjust pan to center the tree properly within the canvas
-    if (root) {
-        const treeCenterX = (boundingBox.minX + boundingBox.maxX) / 2;
-        const treeCenterY = (boundingBox.minY + boundingBox.maxY) / 2;
-
-        panZoom.x = centerX - treeCenterX * panZoom.scale;
-        panZoom.y = centerY - treeCenterY * panZoom.scale;
-    }
-
-    panZoom.apply();
     space = _space;
-    currentTree = tree; // Update the current tree reference
-}
 
-function calculateTreeBoundingBox(space) {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (let item of space.content) {
-        if (item.g_type === "circle") {
-            minX = Math.min(minX, item.x);
-            minY = Math.min(minY, item.y);
-            maxX = Math.max(maxX, item.x);
-            maxY = Math.max(maxY, item.y);
-        }
-    }
-    return { minX, minY, maxX, maxY };
+    // Auto-center and zoom out to fit content
+    let contentWidth = space.w;
+    let contentHeight = space.h;
+    let scaleX = canvas.width / contentWidth;
+    let scaleY = canvas.height / contentHeight;
+
+    panZoom.scale = Math.min(scaleX, scaleY) * 0.9; // Add padding by scaling down slightly
+    panZoom.centerToContent(contentWidth, contentHeight);
+
+    currentTree = tree;
 }
 
 function setRandomTree() {
@@ -296,8 +255,8 @@ function deleteNodeFromTree() {
         alert("Invalid value entered.");
         return;
     }
-    currentTree = delete_node(currentTree, valueToDelete); // Delete the node
-    setTree(currentTree); // Update the visualization
+    currentTree = delete_node(currentTree, valueToDelete);
+    setTree(currentTree);
 }
 
 function setPopupVisibility(x) {
@@ -311,6 +270,12 @@ function increaseSize() {
 function decreaseSize() {
     panZoom.scaleAt(canvas.width / 4, canvas.height / 4, 0.9);
 }
+
+// Event listeners
+window.addEventListener("resize", () => {
+    updateCanvasSize();
+    setTree(currentTree);
+});
 
 setTree(currentTree);
 
