@@ -219,34 +219,43 @@ requestAnimationFrame(() => update(true));
 function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
     
-    // Center the tree
-    const canvasCenterX = canvas.width / 2;
-    const canvasCenterY = canvas.height / 2;
+    // Calculate tree dimensions
+    const boundingBox = calculateTreeBoundingBox(_space);
+    const treeWidth = boundingBox.maxX - boundingBox.minX;
+    const treeHeight = boundingBox.maxY - boundingBox.minY;
 
+    // Determine appropriate zoom level to fit the tree within the canvas
+    const canvasWidth = canvas.width / 2;
+    const canvasHeight = canvas.height / 2;
+
+    const zoomX = canvasWidth / treeWidth;
+    const zoomY = canvasHeight / treeHeight;
+    panZoom.scale = Math.min(zoomX, zoomY) * 0.9; // Slightly reduce zoom for padding
+
+    // Center the tree
+    const canvasCenterX = canvasWidth / 2;
+    const canvasCenterY = canvasHeight / 2;
     if (root) {
         panZoom.x = canvasCenterX - root.x * panZoom.scale;
         panZoom.y = canvasCenterY - root.y * panZoom.scale;
     }
 
-    // Determine zoom level based on number of nodes in the tree
-    const nodeCount = countNodes(tree);
-    const baseZoom = 1; // default zoom
-    let calculatedZoom = baseZoom;
-
-    // Adjust zoom based on node count
-    if (nodeCount > 50) {
-        calculatedZoom = 0.4; // Zoom out more for larger trees
-    } else if (nodeCount > 100) {
-        calculatedZoom = 0.2;
-    } else if (nodeCount > 200) {
-        calculatedZoom = 0.1; // Keep zooming out for large node counts
-    }
-
-    panZoom.scale = calculatedZoom; // Set the calculated zoom level
     panZoom.apply();
-
     space = _space;
     currentTree = tree; // Update the current tree reference
+}
+
+function calculateTreeBoundingBox(space) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (let item of space.content) {
+        if (item.g_type === "circle") {
+            minX = Math.min(minX, item.x);
+            minY = Math.min(minY, item.y);
+            maxX = Math.max(maxX, item.x);
+            maxY = Math.max(maxY, item.y);
+        }
+    }
+    return { minX, minY, maxX, maxY };
 }
 
 function countNodes(node) {
