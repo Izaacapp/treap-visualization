@@ -13,8 +13,18 @@ a {
     text-decoration: none;
 }
 
+/* Updated header and subheader */
 .header {
     font-size: 2rem;
+    text-align: center;
+    font-weight: bold;
+}
+
+.subheader {
+    font-size: 1.2rem;
+    text-align: center;
+    font-style: italic;
+    margin-top: -10px; /* Adjust this if you need more or less spacing */
 }
 
 .main {
