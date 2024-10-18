@@ -42,31 +42,26 @@ const mouse = {
 
     handle_mouse_down(event) {
         event.preventDefault();
-
         mouse.drag = true;
     },
 
     handle_mouse_move(event) {
         event.preventDefault();
-
         if (mouse.drag) {
             mouse.delta_x += event.movementX;
             mouse.delta_y += event.movementY;
         }
-
         mouse.prev_x = event.offsetX;
         mouse.prev_y = event.offsetY;
     },
 
     handle_mouse_wheel(event) {
         event.preventDefault();
-
         mouse.delta_scale -= event.deltaY;
     },
 
     handle_mouse_out(event) {
         event.preventDefault();
-
         mouse.drag = false;
         mouse.delta_x = 0;
         mouse.delta_y = 0;
@@ -76,7 +71,6 @@ const mouse = {
     // touch event handlers
     handle_touch_down(event) {
         event.preventDefault();
-
         if (event.touches.length !== 1) {
             return;
         }
@@ -86,7 +80,6 @@ const mouse = {
 
     handle_touch_up(event) {
         event.preventDefault();
-
         if (event.touches.length !== 0) {
             return;
         }
@@ -95,12 +88,10 @@ const mouse = {
 
     handle_touch_move(event) {
         event.preventDefault();
-
         if (event.touches.length !== 1) {
             return;
         }
         if (mouse.drag) {
-            console.log(event.touches);
             let pos = extractScreenPos(event);
             mouse.delta_x += pos[0] - mouse.prev_x;
             mouse.delta_y += pos[1] - mouse.prev_y;
@@ -140,7 +131,7 @@ const panZoom = {
     scaleAt(x, y, sc) {
         // x & y are screen coords, not world
         this.scale *= sc;
-        x *= 2; // holyhell
+        x *= 2;
         y *= 2;
         this.x = x + (this.x - x) * sc;
         this.y = y + (this.y - y) * sc;
@@ -231,9 +222,31 @@ function setTree(tree) {
         panZoom.x = canvas.width / 2 - root.x;
     }
     panZoom.y = 0;
-    panZoom.scale = 1;
+
+    // Determine zoom level based on number of nodes in the tree
+    const nodeCount = countNodes(tree);
+    const baseZoom = 1; // default zoom
+    let calculatedZoom = baseZoom;
+
+    // Adjust zoom based on node count
+    if (nodeCount > 50) {
+        calculatedZoom = 0.5; // Zoom out more for larger trees
+    } else if (nodeCount > 100) {
+        calculatedZoom = 0.3;
+    } else if (nodeCount > 200) {
+        calculatedZoom = 0.2; // Keep zooming out for large node counts
+    }
+
+    panZoom.scale = calculatedZoom; // Set the calculated zoom level
+    panZoom.apply();
+
     space = _space;
     currentTree = tree; // Update the current tree reference
+}
+
+function countNodes(node) {
+    if (!node) return 0;
+    return 1 + countNodes(node.left) + countNodes(node.right);
 }
 
 function setRandomTree() {
