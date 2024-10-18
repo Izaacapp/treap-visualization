@@ -218,7 +218,7 @@ requestAnimationFrame(() => update(true));
 
 function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
-    
+
     // Calculate tree dimensions
     const boundingBox = calculateTreeBoundingBox(_space);
     const treeWidth = boundingBox.maxX - boundingBox.minX;
