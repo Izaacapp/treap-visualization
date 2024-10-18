@@ -232,12 +232,18 @@ function setTree(tree) {
     const zoomY = canvasHeight / treeHeight;
     panZoom.scale = Math.min(zoomX, zoomY) * 0.9; // Slightly reduce zoom for padding
 
-    // Adjust panZoom to keep the entire tree within the canvas frame
-    const offsetX = (canvasWidth - treeWidth * panZoom.scale) / 2;
-    const offsetY = (canvasHeight - treeHeight * panZoom.scale) / 2;
+    // Center the tree in the canvas
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
 
-    panZoom.x = -boundingBox.minX * panZoom.scale + offsetX;
-    panZoom.y = -boundingBox.minY * panZoom.scale + offsetY;
+    // Adjust pan to center the tree properly within the canvas
+    if (root) {
+        const treeCenterX = (boundingBox.minX + boundingBox.maxX) / 2;
+        const treeCenterY = (boundingBox.minY + boundingBox.maxY) / 2;
+
+        panZoom.x = centerX - treeCenterX * panZoom.scale;
+        panZoom.y = centerY - treeCenterY * panZoom.scale;
+    }
 
     panZoom.apply();
     space = _space;
@@ -255,11 +261,6 @@ function calculateTreeBoundingBox(space) {
         }
     }
     return { minX, minY, maxX, maxY };
-}
-
-function countNodes(node) {
-    if (!node) return 0;
-    return 1 + countNodes(node.left) + countNodes(node.right);
 }
 
 function setRandomTree() {
