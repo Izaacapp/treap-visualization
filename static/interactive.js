@@ -1,4 +1,4 @@
-import {random_tree_with_n_nodes, tree_by_keys_and_values} from "./decart-logic.js";
+import {random_tree_with_n_nodes, tree_by_keys_and_values, delete_node} from "./decart-logic.js";
 import {tree_to_space} from "./transform-logic.js";
 import {GeometrySpace} from "./geometry-logic.js";
 
@@ -7,6 +7,7 @@ const DEBUG = false;
 
 const applyButton = document.getElementById("set-user-data");
 const randomButton = document.getElementById("set-random");
+const deleteButton = document.getElementById("delete-node");
 const userData = document.getElementById("user-data");
 const canvas = document.getElementById("canvas");
 
@@ -22,6 +23,8 @@ const ctx = canvas.getContext("2d");
 let canvasRect = canvas.getBoundingClientRect();
 canvas.width = canvasRect.width * 2;
 canvas.height = canvasRect.height * 2;
+
+let currentTree = random_tree_with_n_nodes(10); // Track current tree globally
 
 function extractScreenPos(event) {
     let t = event.touches[0];
@@ -71,7 +74,6 @@ const mouse = {
     },
 
     // touch event handlers
-
     handle_touch_down(event) {
         event.preventDefault();
 
@@ -126,17 +128,17 @@ const mouse = {
     },
 };
 
-
 const panZoom = {
-    x:     0,
-    y:     0,
+    x: 0,
+    y: 0,
     scale: 1,
 
     apply() {
         ctx.setTransform(this.scale, 0, 0, this.scale, this.x, this.y);
     },
 
-    scaleAt(x, y, sc) {  // x & y are screen coords, not world
+    scaleAt(x, y, sc) {
+        // x & y are screen coords, not world
         this.scale *= sc;
         x *= 2; // holyhell
         y *= 2;
@@ -144,7 +146,8 @@ const panZoom = {
         this.y = y + (this.y - y) * sc;
     },
 
-    toWorld(x, y) {   // converts from screen coords to world coords
+    toWorld(x, y) {
+        // converts from screen coords to world coords
         const inv = 1 / this.scale;
         return {
             x: (x - this.x) * inv,
@@ -153,18 +156,18 @@ const panZoom = {
     },
 };
 
-
 let space = new GeometrySpace(0, 0);
 
-
 function draw_everything(thick_mode = false) {
-    { // clear canvas
+    {
+        // clear canvas
         ctx.fillStyle = "white";
-        let {x, y} = panZoom.toWorld(0, 0);
+        let { x, y } = panZoom.toWorld(0, 0);
         ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
     }
 
-    { // draw tree
+    {
+        // draw tree
         ctx.fillStyle = "black";
 
         if (thick_mode) {
@@ -177,23 +180,19 @@ function draw_everything(thick_mode = false) {
                     ctx.stroke();
                 }
             }
-
         } else {
             ctx.lineWidth = 15;
 
             for (let thing of space.content) {
-
                 if (thing.g_type === "circle") {
                     ctx.beginPath();
                     ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
                     ctx.stroke();
-
                 } else if (thing.g_type === "line") {
                     ctx.beginPath();
                     ctx.moveTo(thing.sx1, thing.sy1);
                     ctx.lineTo(thing.sx2, thing.sy2);
                     ctx.stroke();
-
                 } else if (thing.g_type === "text") {
                     ctx.textAlign = thing.align;
                     ctx.textBaseline = thing.baseline;
@@ -204,7 +203,8 @@ function draw_everything(thick_mode = false) {
         }
     }
 
-    if (DEBUG) { // draw axes
+    if (DEBUG) {
+        // draw axes
         ctx.beginPath();
         ctx.moveTo(1000, 0);
         ctx.lineTo(-1000, 0);
@@ -223,7 +223,6 @@ function update(forced = false) {
     requestAnimationFrame(update);
 }
 
-
 requestAnimationFrame(() => update(true));
 
 function setTree(tree) {
@@ -234,6 +233,7 @@ function setTree(tree) {
     panZoom.y = 0;
     panZoom.scale = 1;
     space = _space;
+    currentTree = tree; // Update the current tree reference
 }
 
 function setRandomTree() {
@@ -244,18 +244,18 @@ function setRandomTree() {
 function setUserTree() {
     try {
         let dat = userData.value
-                          .split("\n")
-                          .filter(x => x)
-                          .map(line => {
-                              let nums = line
-                                  .split(" ")
-                                  .filter(x => x)
-                                  .map(Number);
-                              if (nums.length >= 3) {
-                                  throw Error("Too many numbers in line(max 2): " + line);
-                              }
-                              return nums;
-                          });
+            .split("\n")
+            .filter((x) => x)
+            .map((line) => {
+                let nums = line
+                    .split(" ")
+                    .filter((x) => x)
+                    .map(Number);
+                if (nums.length >= 3) {
+                    throw Error("Too many numbers in line(max 2): " + line);
+                }
+                return nums;
+            });
 
         setTree(tree_by_keys_and_values(dat));
     } catch (e) {
@@ -263,11 +263,19 @@ function setUserTree() {
     }
 }
 
+function deleteNodeFromTree() {
+    let valueToDelete = parseInt(prompt("Enter value to delete:"));
+    if (isNaN(valueToDelete)) {
+        alert("Invalid value entered.");
+        return;
+    }
+    currentTree = delete_node(currentTree, valueToDelete); // Delete the node
+    setTree(currentTree); // Update the visualization
+}
 
 function setPopupVisibility(x) {
     popup.style.display = x ? "grid" : "none";
 }
-
 
 function increaseSize() {
     panZoom.scaleAt(canvas.width / 4, canvas.height / 4, 1.1);
@@ -277,7 +285,7 @@ function decreaseSize() {
     panZoom.scaleAt(canvas.width / 4, canvas.height / 4, 0.9);
 }
 
-setTree(random_tree_with_n_nodes(10));
+setTree(currentTree);
 
 canvas.addEventListener("mousedown", mouse.handle_mouse_down);
 canvas.addEventListener("mouseup", mouse.handle_mouse_up);
@@ -289,14 +297,15 @@ canvas.addEventListener("touchstart", mouse.handle_touch_down);
 canvas.addEventListener("touchend", mouse.handle_touch_up);
 applyButton.addEventListener("click", setUserTree);
 randomButton.addEventListener("click", setRandomTree);
+deleteButton.addEventListener("click", deleteNodeFromTree);
 
 increaseButton.addEventListener("click", increaseSize);
-document.addEventListener("keypress", event => {
+document.addEventListener("keypress", (event) => {
     if (event.key === "=") increaseSize();
 });
 
 decreaseButton.addEventListener("click", decreaseSize);
-document.addEventListener("keypress", event => {
+document.addEventListener("keypress", (event) => {
     if (event.key === "-") decreaseSize();
 });
 
