@@ -2,50 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     <title>Treap</title>
     <link rel='stylesheet' href='/static/index-style.css'/>
     <link rel="icon" type="image/svg" href="/static/favicon.svg">
-    <style>
-        /* Refine styles to fix positioning and blurriness */
-        .canvas-container {
-            position: relative;
-            width: 100%;
-            height: 80vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: black 1px solid;
-            box-sizing: border-box;
-        }
-
-        canvas {
-            width: 100%; /* Let it expand within its container */
-            height: 100%; /* Let it expand within its container */
-            box-sizing: border-box;
-        }
-
-        /* Added to ensure buttons remain well-placed and responsive */
-        button[id="increase-size"],
-        button[id="decrease-size"] {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 2;
-            width: 40px;
-            height: 40px;
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            font-size: 35px;
-        }
-
-        button[id="decrease-size"] {
-            left: 60px !important;
-        }
-    </style>
 </head>
 <body>
     <!-- Updated header section with symmetrical styling -->
@@ -71,7 +34,7 @@
 
         <!-- Canvas section for the treap visualization -->
         <div class="canvas-container">
-            <canvas id="canvas"></canvas>
+            <canvas id="canvas" height="2009" width="3009"></canvas>
             <button id="increase-size">&plus;</button>
             <button id="decrease-size">&minus;</button>
         </div>
