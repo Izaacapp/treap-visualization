@@ -2,7 +2,6 @@ import {GeometryCircle, GeometryLine, GeometrySpace, GeometryText} from "./geome
 
 const RADIUS = 100;
 
-
 function get_margin(w) {
     return w / 10;
 }
@@ -21,27 +20,30 @@ function _tree_to_space(tree) {
     }
     let center_margin = RADIUS * 3;
 
-    let space = new GeometrySpace(
-        left.w + center_margin + right.w,
-        top_margin + Math.max(left.h, right.h),
-    );
+    // Calculate space width to balance left and right subtrees around the root
+    let totalWidth = left.w + center_margin + right.w;
+    let space = new GeometrySpace(totalWidth, top_margin + Math.max(left.h, right.h));
 
-    space.project(0, top_margin, left);
-    space.project(left.w + center_margin, top_margin, right);
+    // Project left and right subtree geometries with adjusted offsets for centering
+    let leftOffset = (totalWidth / 2) - (left.w / 2);
+    space.project(leftOffset, top_margin, left);
+    space.project(leftOffset + left.w + center_margin, top_margin, right);
 
-    let vertex = new GeometryCircle(left.w + RADIUS, RADIUS, RADIUS);
-
+    // Create the root node
+    let vertexX = leftOffset + left.w + RADIUS;
+    let vertex = new GeometryCircle(vertexX, RADIUS, RADIUS);
     space.insert(vertex);
 
-    space.insert(new GeometryText(left.w + RADIUS, RADIUS, tree.value, RADIUS * 2 / Math.max(2, tree.value.toString().length)));
-    space.insert(new GeometryText(left.w + 2.2 * RADIUS, RADIUS, tree.power, 50, "left"));
+    // Insert value and priority as text
+    space.insert(new GeometryText(vertexX, RADIUS, tree.value, RADIUS * 2 / Math.max(2, tree.value.toString().length)));
+    space.insert(new GeometryText(vertexX + 1.2 * RADIUS, RADIUS, tree.power, 50, "left"));
 
+    // Draw lines from root to left and right nodes, if they exist
     if (left_node != null) {
-        space.insert(new GeometryLine(left.w + RADIUS, RADIUS, left_node.x, left_node.y, RADIUS));
+        space.insert(new GeometryLine(vertexX, RADIUS, left_node.x, left_node.y, RADIUS));
     }
-
     if (right_node != null) {
-        space.insert(new GeometryLine(left.w + RADIUS, RADIUS, right_node.x, right_node.y, RADIUS));
+        space.insert(new GeometryLine(vertexX, RADIUS, right_node.x, right_node.y, RADIUS));
     }
 
     return [space, vertex];
