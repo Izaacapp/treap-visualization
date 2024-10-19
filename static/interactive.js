@@ -287,12 +287,12 @@ function setPopupVisibility(x) {
 }
 
 function increaseSize() {
-    panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 1.1);
+    panZoom.scaleAt(canvas.width / 2, canvas.height / 2);
     panZoom.translateToCenter(space);
 }
 
 function decreaseSize() {
-    panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 1.1);
+    panZoom.scaleAt(canvas.width / 2, canvas.height / 2);
     panZoom.translateToCenter(space);
 }
 
