@@ -162,6 +162,7 @@ const panZoom = {
     },
 
     translateToCenter(space) {
+        // Adjust the panning to center the entire diagram in the canvas
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
@@ -172,45 +173,46 @@ const panZoom = {
 
 let space = new GeometrySpace(0, 0);
 
-// Function to dynamically draw connections between parent and child nodes
-function drawConnections(parent, children) {
-    if (!children || children.length === 0) return;
-
-    // For each child, draw a line from parent to child
-    children.forEach((child) => {
-        if (child) {
-            ctx.beginPath();
-            ctx.moveTo(parent.x, parent.y);
-            ctx.lineTo(child.x, child.y);
-            ctx.stroke();
-            // Recursively draw connections for the child's children
-            drawConnections(child, child.children || []);
-        }
-    });
-}
-
 function draw_everything(thick_mode = false) {
-    ctx.fillStyle = "white";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "black";
-    ctx.lineWidth = thick_mode ? 100 : 15;
-
-    // Traverse the tree and draw the connections dynamically
-    if (space.root && space.root.children) {
-        drawConnections(space.root, space.root.children);
+    {
+        ctx.fillStyle = "white";
+        let { x, y } = panZoom.toWorld(0, 0);
+        ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
     }
 
-    for (let thing of space.content) {
-        if (thing.g_type === "circle") {
-            ctx.beginPath();
-            ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
-            ctx.stroke();
-        } else if (thing.g_type === "text") {
-            ctx.textAlign = thing.align;
-            ctx.textBaseline = thing.baseline;
-            ctx.font = `${thing.size}px monospace`;
-            ctx.fillText(thing.text, thing.x, thing.y);
+    {
+        ctx.fillStyle = "black";
+
+        if (thick_mode) {
+            ctx.lineWidth = 100;
+            for (let thing of space.content) {
+                if (thing.g_type === "line") {
+                    ctx.beginPath();
+                    ctx.moveTo(thing.x1, thing.y1);
+                    ctx.lineTo(thing.x2, thing.y2);
+                    ctx.stroke();
+                }
+            }
+        } else {
+            ctx.lineWidth = 15;
+
+            for (let thing of space.content) {
+                if (thing.g_type === "circle") {
+                    ctx.beginPath();
+                    ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                } else if (thing.g_type === "line") {
+                    ctx.beginPath();
+                    ctx.moveTo(thing.sx1, thing.sy1);
+                    ctx.lineTo(thing.sx2, thing.sy2);
+                    ctx.stroke();
+                } else if (thing.g_type === "text") {
+                    ctx.textAlign = thing.align;
+                    ctx.textBaseline = thing.baseline;
+                    ctx.font = `${thing.size}px monospace`;
+                    ctx.fillText(thing.text, thing.x, thing.y);
+                }
+            }
         }
     }
 
@@ -240,7 +242,7 @@ function setTree(tree) {
     space = _space;
     currentTree = tree;
     panZoom.resetToFit(space);
-    panZoom.translateToCenter(space);
+    panZoom.translateToCenter(space); // Center the tree within the canvas
 }
 
 function setRandomTree() {
