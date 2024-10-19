@@ -16,21 +16,21 @@ function _tree_to_space(tree) {
 
     let top_margin = RADIUS * 2;
     if (left_node && right_node) {
-        top_margin += get_margin(left.w - left_node.x + 2 * RADIUS + right_node.x);
+        top_margin += get_margin(left.w + right.w);
     }
-    let center_margin = RADIUS * 3;
+    let center_margin = Math.max(RADIUS * 3, get_margin(left.w + right.w));
 
     // Calculate space width to balance left and right subtrees around the root
     let totalWidth = left.w + center_margin + right.w;
     let space = new GeometrySpace(totalWidth, top_margin + Math.max(left.h, right.h));
 
     // Project left and right subtree geometries with adjusted offsets for centering
-    let leftOffset = (totalWidth / 2) - (left.w / 2);
+    let leftOffset = (totalWidth - left.w - right.w) / 2;
     space.project(leftOffset, top_margin, left);
     space.project(leftOffset + left.w + center_margin, top_margin, right);
 
     // Create the root node
-    let vertexX = leftOffset + left.w + RADIUS;
+    let vertexX = leftOffset + left.w + center_margin / 2;
     let vertex = new GeometryCircle(vertexX, RADIUS, RADIUS);
     space.insert(vertex);
 
