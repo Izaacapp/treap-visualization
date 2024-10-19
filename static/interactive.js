@@ -172,6 +172,23 @@ const panZoom = {
 
 let space = new GeometrySpace(0, 0);
 
+// Function to dynamically draw connections between parent and child nodes
+function drawConnections(parent, children) {
+    if (!children || children.length === 0) return;
+
+    // For each child, draw a line from parent to child
+    children.forEach((child) => {
+        if (child) {
+            ctx.beginPath();
+            ctx.moveTo(parent.x, parent.y);
+            ctx.lineTo(child.x, child.y);
+            ctx.stroke();
+            // Recursively draw connections for the child's children
+            drawConnections(child, child.children || []);
+        }
+    });
+}
+
 function draw_everything(thick_mode = false) {
     ctx.fillStyle = "white";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -179,15 +196,15 @@ function draw_everything(thick_mode = false) {
     ctx.fillStyle = "black";
     ctx.lineWidth = thick_mode ? 100 : 15;
 
+    // Traverse the tree and draw the connections dynamically
+    if (space.root && space.root.children) {
+        drawConnections(space.root, space.root.children);
+    }
+
     for (let thing of space.content) {
         if (thing.g_type === "circle") {
             ctx.beginPath();
             ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
-            ctx.stroke();
-        } else if (thing.g_type === "line") {
-            ctx.beginPath();
-            ctx.moveTo(thing.sx1, thing.sy1);
-            ctx.lineTo(thing.sx2, thing.sy2);
             ctx.stroke();
         } else if (thing.g_type === "text") {
             ctx.textAlign = thing.align;
