@@ -230,7 +230,7 @@ function update(forced = false) {
     const changed = mouse.update();
     if (changed || forced) {
         panZoom.apply();
-        draw_everything(panZoom.scale < 0.2);
+        draw_everything(panZoom.scale < 0);
     }
     requestAnimationFrame(update);
 }
@@ -292,7 +292,7 @@ function increaseSize() {
 }
 
 function decreaseSize() {
-    panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 0.9);
+    panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 1.1);
     panZoom.translateToCenter(space);
 }
 
