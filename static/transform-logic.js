@@ -22,8 +22,7 @@ function _tree_to_space(tree) {
 
     // Calculate space height to balance left and right subtrees under the root
     let totalHeight = left.h + vertical_margin + right.h;
-    let totalWidth = side_margin + Math.max(left.w, right.w);
-    let space = new GeometrySpace(totalWidth, totalHeight);
+    let space = new GeometrySpace(side_margin + Math.max(left.w, right.w), totalHeight);
 
     // Project left and right subtree geometries with adjusted offsets for centering vertically
     let topOffset = (totalHeight - left.h - right.h) / 2;
@@ -50,23 +49,8 @@ function _tree_to_space(tree) {
     return [space, vertex];
 }
 
-export function tree_to_space(tree, canvasWidth, canvasHeight) {
+export function tree_to_space(tree) {
     let [space, root] = _tree_to_space(tree);
-
-    // Scale the space to fit within the canvas
-    let scaleX = canvasWidth / space.w;
-    let scaleY = canvasHeight / space.h;
-    let scale = Math.min(scaleX, scaleY) * 0.9; // Add padding (10%)
-
-    for (let item of space.content) {
-        item.x *= scale;
-        item.y *= scale;
-        if (item.g_type === "circle") {
-            item.radius *= scale;
-        } else if (item.g_type === "text") {
-            item.size *= scale;
-        }
-    }
 
     let priorities = {"circle": 1, "line": 0, "text": 1};
     space.content.sort((a, b) => priorities[a.g_type] - priorities[b.g_type]);
