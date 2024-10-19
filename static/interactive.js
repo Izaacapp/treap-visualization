@@ -1,4 +1,4 @@
-import {tree_by_keys_and_values, delete_node} from "./decart-logic.js";
+import {random_tree_with_n_nodes, tree_by_keys_and_values, delete_node} from "./decart-logic.js";
 import {tree_to_space} from "./transform-logic.js";
 import {GeometrySpace} from "./geometry-logic.js";
 
@@ -24,7 +24,7 @@ let canvasRect = canvas.getBoundingClientRect();
 canvas.width = canvasRect.width * 2;
 canvas.height = canvasRect.height * 2;
 
-let currentTree = balanced_tree_with_n_nodes(10); // Start with a balanced tree
+let currentTree = random_tree_with_n_nodes(10); // Track current tree globally
 
 function extractScreenPos(event) {
     let t = event.touches[0];
@@ -209,7 +209,7 @@ function draw_everything(thick_mode = false) {
                 } else if (thing.g_type === "text") {
                     ctx.textAlign = thing.align;
                     ctx.textBaseline = thing.baseline;
-                    ctx.font = `${thing.size}px monospace`;
+                    ctx.font = ${thing.size}px monospace;
                     ctx.fillText(thing.text, thing.x, thing.y);
                 }
             }
@@ -245,28 +245,9 @@ function setTree(tree) {
     panZoom.translateToCenter(space); // Center the tree within the canvas
 }
 
-// Generate a balanced binary tree with n nodes
-function balanced_tree_with_n_nodes(n) {
-    const values = Array.from({ length: n }, (_, i) => i + 1); // Generate array [1, 2, ..., n]
-    return sorted_array_to_bst(values);
-}
-
-// Convert sorted array to balanced BST
-function sorted_array_to_bst(arr, start = 0, end = arr.length - 1) {
-    if (start > end) return null;
-
-    const mid = Math.floor((start + end) / 2);
-    const node = { key: arr[mid], left: null, right: null };
-
-    node.left = sorted_array_to_bst(arr, start, mid - 1);
-    node.right = sorted_array_to_bst(arr, mid + 1, end);
-
-    return node;
-}
-
 function setRandomTree() {
     let n = parseInt(prompt("Enter number of nodes: ", "30"));
-    setTree(balanced_tree_with_n_nodes(n)); // Use balanced tree generation
+    setTree(random_tree_with_n_nodes(n));
 }
 
 function setUserTree() {
