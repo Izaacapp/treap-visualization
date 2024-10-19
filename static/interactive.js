@@ -1,4 +1,4 @@
-import {random_tree_with_n_nodes, tree_by_keys_and_values, delete_node} from "./decart-logic.js";
+import {random_tree_with_n_nodes, tree_by_keys_and_values} from "./decart-logic.js";
 import {tree_to_space} from "./transform-logic.js";
 import {GeometrySpace} from "./geometry-logic.js";
 
@@ -7,7 +7,6 @@ const DEBUG = false;
 
 const applyButton = document.getElementById("set-user-data");
 const randomButton = document.getElementById("set-random");
-const deleteButton = document.getElementById("delete-node");
 const userData = document.getElementById("user-data");
 const canvas = document.getElementById("canvas");
 
@@ -24,81 +23,188 @@ let canvasRect = canvas.getBoundingClientRect();
 canvas.width = canvasRect.width * 2;
 canvas.height = canvasRect.height * 2;
 
-let currentTree = random_tree_with_n_nodes(10); // Track current tree globally
-
-// Helper function to calculate the width of a subtree (used for centering nodes)
-function calculateSubtreeWidth(node) {
-    if (!node || !node.children || node.children.length === 0) {
-        return 1; // Base width for leaf nodes
-    }
-    return node.children.reduce((total, child) => total + calculateSubtreeWidth(child), 0);
+function extractScreenPos(event) {
+    let t = event.touches[0];
+    return [t.screenX, t.screenY];
 }
 
-// Recursive function to position nodes, ensuring balanced heights
-function positionNodesBalanced(node, depth = 0, xOffset = 0) {
-    const nodeSpacingX = 200;
-    const nodeSpacingY = 150;
+const mouse = {
+    delta_x: 0, delta_y: 0, delta_scale: 0, prev_x: 0, prev_y: 0, drag: false,
 
-    // Calculate total width of left and right subtrees for balancing
-    const subtreeWidth = calculateSubtreeWidth(node);
+    // mouse event handlers
+    handle_mouse_up(event) {
+        event.preventDefault();
+        mouse.drag = false;
+    },
 
-    node.x = xOffset + (subtreeWidth / 2) * nodeSpacingX;
-    node.y = depth * nodeSpacingY;
+    handle_mouse_down(event) {
+        event.preventDefault();
 
-    if (node.children) {
-        let childXOffset = xOffset;
-        node.children.forEach((child) => {
-            const childSubtreeWidth = calculateSubtreeWidth(child);
-            positionNodesBalanced(child, depth + 1, childXOffset);
-            childXOffset += childSubtreeWidth * nodeSpacingX;
-        });
-    }
-}
+        mouse.drag = true;
+    },
 
-// Function to dynamically draw connections between parent and child nodes
-function drawConnections(parent, children) {
-    if (!children || children.length === 0) return;
+    handle_mouse_move(event) {
+        event.preventDefault();
 
-    // For each child, draw a line from parent to child
-    children.forEach((child) => {
-        if (child) {
-            ctx.beginPath();
-            ctx.moveTo(parent.x, parent.y);
-            ctx.lineTo(child.x, child.y);
-            ctx.stroke();
-
-            // Recursively draw connections for the child's children
-            drawConnections(child, child.children || []);
+        if (mouse.drag) {
+            mouse.delta_x += event.movementX;
+            mouse.delta_y += event.movementY;
         }
-    });
-}
+
+        mouse.prev_x = event.offsetX;
+        mouse.prev_y = event.offsetY;
+    },
+
+    handle_mouse_wheel(event) {
+        event.preventDefault();
+
+        mouse.delta_scale -= event.deltaY;
+    },
+
+    handle_mouse_out(event) {
+        event.preventDefault();
+
+        mouse.drag = false;
+        mouse.delta_x = 0;
+        mouse.delta_y = 0;
+        mouse.delta_scale = 0;
+    },
+
+    // touch event handlers
+
+    handle_touch_down(event) {
+        event.preventDefault();
+
+        if (event.touches.length !== 1) {
+            return;
+        }
+        mouse.drag = true;
+        [mouse.prev_x, mouse.prev_y] = extractScreenPos(event);
+    },
+
+    handle_touch_up(event) {
+        event.preventDefault();
+
+        if (event.touches.length !== 0) {
+            return;
+        }
+        mouse.drag = false;
+    },
+
+    handle_touch_move(event) {
+        event.preventDefault();
+
+        if (event.touches.length !== 1) {
+            return;
+        }
+        if (mouse.drag) {
+            console.log(event.touches);
+            let pos = extractScreenPos(event);
+            mouse.delta_x += pos[0] - mouse.prev_x;
+            mouse.delta_y += pos[1] - mouse.prev_y;
+            [mouse.prev_x, mouse.prev_y] = pos;
+        }
+    },
+
+    update() {
+        let changed = false;
+        if (mouse.delta_scale) {
+            panZoom.scaleAt(mouse.prev_x, mouse.prev_y, Math.exp(mouse.delta_scale / 1000));
+            mouse.delta_scale = 0;
+            changed = true;
+        }
+
+        if (mouse.delta_x !== 0 || mouse.delta_y !== 0) {
+            panZoom.x += mouse.delta_x * SPEED_FACTOR;
+            panZoom.y += mouse.delta_y * SPEED_FACTOR;
+            mouse.delta_x = 0;
+            mouse.delta_y = 0;
+            changed = true;
+        }
+
+        return changed;
+    },
+};
+
+
+const panZoom = {
+    x:     0,
+    y:     0,
+    scale: 1,
+
+    apply() {
+        ctx.setTransform(this.scale, 0, 0, this.scale, this.x, this.y);
+    },
+
+    scaleAt(x, y, sc) {  // x & y are screen coords, not world
+        this.scale *= sc;
+        x *= 2; // holyhell
+        y *= 2;
+        this.x = x + (this.x - x) * sc;
+        this.y = y + (this.y - y) * sc;
+    },
+
+    toWorld(x, y) {   // converts from screen coords to world coords
+        const inv = 1 / this.scale;
+        return {
+            x: (x - this.x) * inv,
+            y: (y - this.y) * inv,
+        };
+    },
+};
+
+
+let space = new GeometrySpace(0, 0);
+
 
 function draw_everything(thick_mode = false) {
-    ctx.fillStyle = "white";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "black";
-    ctx.lineWidth = thick_mode ? 100 : 15;
-
-    // Traverse the tree and draw the connections dynamically
-    if (space.root && space.root.children) {
-        drawConnections(space.root, space.root.children);
+    { // clear canvas
+        ctx.fillStyle = "white";
+        let {x, y} = panZoom.toWorld(0, 0);
+        ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
     }
 
-    for (let thing of space.content) {
-        if (thing.g_type === "circle") {
-            ctx.beginPath();
-            ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
-            ctx.stroke();
-        } else if (thing.g_type === "text") {
-            ctx.textAlign = thing.align;
-            ctx.textBaseline = thing.baseline;
-            ctx.font = `${thing.size}px monospace`;
-            ctx.fillText(thing.text, thing.x, thing.y);
+    { // draw tree
+        ctx.fillStyle = "black";
+
+        if (thick_mode) {
+            ctx.lineWidth = 100;
+            for (let thing of space.content) {
+                if (thing.g_type === "line") {
+                    ctx.beginPath();
+                    ctx.moveTo(thing.x1, thing.y1);
+                    ctx.lineTo(thing.x2, thing.y2);
+                    ctx.stroke();
+                }
+            }
+
+        } else {
+            ctx.lineWidth = 15;
+
+            for (let thing of space.content) {
+
+                if (thing.g_type === "circle") {
+                    ctx.beginPath();
+                    ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+
+                } else if (thing.g_type === "line") {
+                    ctx.beginPath();
+                    ctx.moveTo(thing.sx1, thing.sy1);
+                    ctx.lineTo(thing.sx2, thing.sy2);
+                    ctx.stroke();
+
+                } else if (thing.g_type === "text") {
+                    ctx.textAlign = thing.align;
+                    ctx.textBaseline = thing.baseline;
+                    ctx.font = `${thing.size}px monospace`;
+                    ctx.fillText(thing.text, thing.x, thing.y);
+                }
+            }
         }
     }
 
-    if (DEBUG) {
+    if (DEBUG) { // draw axes
         ctx.beginPath();
         ctx.moveTo(1000, 0);
         ctx.lineTo(-1000, 0);
@@ -117,16 +223,17 @@ function update(forced = false) {
     requestAnimationFrame(update);
 }
 
+
 requestAnimationFrame(() => update(true));
 
 function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
+    if (root) {
+        panZoom.x = canvas.width / 2 - root.x;
+    }
+    panZoom.y = 0;
+    panZoom.scale = 1;
     space = _space;
-    currentTree = tree;
-
-    // Position nodes using balanced positioning
-    positionNodesBalanced(root);
-    panZoom.resetToFit(space); // Ensure the tree fits the canvas width
 }
 
 function setRandomTree() {
@@ -137,18 +244,18 @@ function setRandomTree() {
 function setUserTree() {
     try {
         let dat = userData.value
-            .split("\n")
-            .filter((x) => x)
-            .map((line) => {
-                let nums = line
-                    .split(" ")
-                    .filter((x) => x)
-                    .map(Number);
-                if (nums.length >= 3) {
-                    throw Error("Too many numbers in line(max 2): " + line);
-                }
-                return nums;
-            });
+                          .split("\n")
+                          .filter(x => x)
+                          .map(line => {
+                              let nums = line
+                                  .split(" ")
+                                  .filter(x => x)
+                                  .map(Number);
+                              if (nums.length >= 3) {
+                                  throw Error("Too many numbers in line(max 2): " + line);
+                              }
+                              return nums;
+                          });
 
         setTree(tree_by_keys_and_values(dat));
     } catch (e) {
@@ -156,31 +263,21 @@ function setUserTree() {
     }
 }
 
-function deleteNodeFromTree() {
-    let valueToDelete = parseInt(prompt("Enter value to delete:"));
-    if (isNaN(valueToDelete)) {
-        alert("Invalid value entered.");
-        return;
-    }
-    currentTree = delete_node(currentTree, valueToDelete);
-    setTree(currentTree);
-}
 
 function setPopupVisibility(x) {
     popup.style.display = x ? "grid" : "none";
 }
 
+
 function increaseSize() {
-    panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 1.1);
-    panZoom.apply();
+    panZoom.scaleAt(canvas.width / 4, canvas.height / 4, 1.1);
 }
 
 function decreaseSize() {
-    panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 0.9);
-    panZoom.apply();
+    panZoom.scaleAt(canvas.width / 4, canvas.height / 4, 0.9);
 }
 
-setTree(currentTree);
+setTree(random_tree_with_n_nodes(10));
 
 canvas.addEventListener("mousedown", mouse.handle_mouse_down);
 canvas.addEventListener("mouseup", mouse.handle_mouse_up);
@@ -192,15 +289,14 @@ canvas.addEventListener("touchstart", mouse.handle_touch_down);
 canvas.addEventListener("touchend", mouse.handle_touch_up);
 applyButton.addEventListener("click", setUserTree);
 randomButton.addEventListener("click", setRandomTree);
-deleteButton.addEventListener("click", deleteNodeFromTree);
 
 increaseButton.addEventListener("click", increaseSize);
-document.addEventListener("keypress", (event) => {
+document.addEventListener("keypress", event => {
     if (event.key === "=") increaseSize();
 });
 
 decreaseButton.addEventListener("click", decreaseSize);
-document.addEventListener("keypress", (event) => {
+document.addEventListener("keypress", event => {
     if (event.key === "-") decreaseSize();
 });
 
