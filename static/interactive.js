@@ -232,7 +232,26 @@ function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
     space = _space;
     currentTree = tree;
+    adjustTreeLayout(space);
     panZoom.resetToFit(space);
+}
+
+function adjustTreeLayout(space) {
+    // Adjust the layout to keep lines neat and reduce excessive length
+    const MAX_LINE_LENGTH = 300; // Maximum allowed length for lines
+
+    space.content.forEach((thing) => {
+        if (thing.g_type === "line") {
+            const dx = thing.x2 - thing.x1;
+            const dy = thing.y2 - thing.y1;
+            const length = Math.hypot(dx, dy);
+            if (length > MAX_LINE_LENGTH) {
+                const ratio = MAX_LINE_LENGTH / length;
+                thing.x2 = thing.x1 + dx * ratio;
+                thing.y2 = thing.y1 + dy * ratio;
+            }
+        }
+    });
 }
 
 function setRandomTree() {
