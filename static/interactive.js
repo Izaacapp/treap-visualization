@@ -133,8 +133,6 @@ const panZoom = {
 
     scaleAt(x, y, sc) {
         this.scale *= sc;
-        x *= 2;
-        y *= 2;
         this.x = x + (this.x - x) * sc;
         this.y = y + (this.y - y) * sc;
     },
@@ -161,6 +159,15 @@ const panZoom = {
         this.scale = Math.min(scaleX, scaleY);
         this.x = (canvasWidth - spaceWidth * this.scale) / 2;
         this.y = (canvasHeight - spaceHeight * this.scale) / 2;
+    },
+
+    translateToCenter(space) {
+        // Adjust the panning to center the entire diagram in the canvas
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        this.x = centerX - (space.w * this.scale) / 2;
+        this.y = centerY - (space.h * this.scale) / 2;
     },
 };
 
@@ -234,7 +241,8 @@ function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
     space = _space;
     currentTree = tree;
-    panZoom.resetToFit(space); // Auto-fit and center the tree
+    panZoom.resetToFit(space);
+    panZoom.translateToCenter(space); // Center the tree within the canvas
 }
 
 function setRandomTree() {
@@ -280,10 +288,12 @@ function setPopupVisibility(x) {
 
 function increaseSize() {
     panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 1.1);
+    panZoom.translateToCenter(space);
 }
 
 function decreaseSize() {
     panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 0.9);
+    panZoom.translateToCenter(space);
 }
 
 setTree(currentTree);
