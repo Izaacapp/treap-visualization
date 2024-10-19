@@ -56,7 +56,6 @@ export class GeometryLine {
     }
 }
 
-
 export class GeometryText {
     constructor(x, y, text, size, align = "center", baseline = "middle") {
         text = text.toString();
@@ -78,14 +77,19 @@ export class GeometrySpace {
     }
 
     insert(thing) {
-        this.content.push(thing);
+        if (thing && typeof thing.x === 'number' && typeof thing.y === 'number') {
+            this.content.push(thing);
+        } else {
+            throw new Error("Invalid object type");
+        }
     }
 
     project(dx, dy, otherSpace) {
         for (let thing of otherSpace.content) {
-            thing.x += dx;
-            thing.y += dy;
-            this.insert(thing);
+            let copy = Object.assign(Object.create(Object.getPrototypeOf(thing)), thing);
+            copy.x += dx;
+            copy.y += dy;
+            this.insert(copy);
         }
     }
 }
