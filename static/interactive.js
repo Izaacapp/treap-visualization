@@ -252,6 +252,22 @@ function adjustTreeLayout(space) {
             }
         }
     });
+
+    // Balance the left and right subtree layouts to make them even
+    const leftNodes = space.content.filter((thing) => thing.g_type === "circle" && thing.x < canvas.width / 2);
+    const rightNodes = space.content.filter((thing) => thing.g_type === "circle" && thing.x > canvas.width / 2);
+    const leftCount = leftNodes.length;
+    const rightCount = rightNodes.length;
+
+    if (leftCount > rightCount) {
+        rightNodes.forEach((node) => {
+            node.x += (leftCount - rightCount) * 20; // Adjust right side to make it even
+        });
+    } else if (rightCount > leftCount) {
+        leftNodes.forEach((node) => {
+            node.x -= (rightCount - leftCount) * 20; // Adjust left side to make it even
+        });
+    }
 }
 
 function setRandomTree() {
