@@ -2,8 +2,8 @@ import {GeometryCircle, GeometryLine, GeometrySpace, GeometryText} from "./geome
 
 const RADIUS = 100;
 
-function get_margin(h) {
-    return h / 10;
+function get_margin(w) {
+    return w / 10;
 }
 
 function _tree_to_space(tree) {
@@ -14,36 +14,36 @@ function _tree_to_space(tree) {
     let [left, left_node] = _tree_to_space(tree.left);
     let [right, right_node] = _tree_to_space(tree.right);
 
-    let side_margin = RADIUS * 2;
+    let top_margin = RADIUS * 2;
     if (left_node && right_node) {
-        side_margin += get_margin(left.h + right.h);
+        top_margin += get_margin(left.w - left_node.x + 2 * RADIUS + right_node.x);
     }
-    let vertical_margin = Math.max(RADIUS * 3, get_margin(left.h + right.h));
+    let center_margin = RADIUS * 3;
 
-    // Calculate space height to balance left and right subtrees under the root
-    let totalHeight = left.h + vertical_margin + right.h;
-    let space = new GeometrySpace(side_margin + Math.max(left.w, right.w), totalHeight);
+    // Calculate space width to balance left and right subtrees around the root
+    let totalWidth = left.w + center_margin + right.w;
+    let space = new GeometrySpace(totalWidth, top_margin + Math.max(left.h, right.h));
 
-    // Project left and right subtree geometries with adjusted offsets for centering vertically
-    let topOffset = (totalHeight - left.h - right.h) / 2;
-    space.project(side_margin, topOffset, left);
-    space.project(side_margin, topOffset + left.h + vertical_margin, right);
+    // Project left and right subtree geometries with adjusted offsets for centering
+    let leftOffset = (totalWidth / 2) - (left.w / 2);
+    space.project(leftOffset, top_margin, left);
+    space.project(leftOffset + left.w + center_margin, top_margin, right);
 
     // Create the root node
-    let vertexY = topOffset + left.h + vertical_margin / 2;
-    let vertex = new GeometryCircle(RADIUS, vertexY, RADIUS);
+    let vertexX = leftOffset + left.w + RADIUS;
+    let vertex = new GeometryCircle(vertexX, RADIUS, RADIUS);
     space.insert(vertex);
 
     // Insert value and priority as text
-    space.insert(new GeometryText(RADIUS, vertexY, tree.value, RADIUS * 2 / Math.max(2, tree.value.toString().length)));
-    space.insert(new GeometryText(RADIUS, vertexY + 1.2 * RADIUS, tree.power, 50, "left"));
+    space.insert(new GeometryText(vertexX, RADIUS, tree.value, RADIUS * 2 / Math.max(2, tree.value.toString().length)));
+    space.insert(new GeometryText(vertexX + 1.2 * RADIUS, RADIUS, tree.power, 50, "left"));
 
     // Draw lines from root to left and right nodes, if they exist
     if (left_node != null) {
-        space.insert(new GeometryLine(RADIUS, vertexY, left_node.x, left_node.y, RADIUS));
+        space.insert(new GeometryLine(vertexX, RADIUS, left_node.x, left_node.y, RADIUS));
     }
     if (right_node != null) {
-        space.insert(new GeometryLine(RADIUS, vertexY, right_node.x, right_node.y, RADIUS));
+        space.insert(new GeometryLine(vertexX, RADIUS, right_node.x, right_node.y, RADIUS));
     }
 
     return [space, vertex];
