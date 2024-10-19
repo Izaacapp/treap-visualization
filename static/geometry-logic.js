@@ -56,6 +56,7 @@ export class GeometryLine {
     }
 }
 
+
 export class GeometryText {
     constructor(x, y, text, size, align = "center", baseline = "middle") {
         text = text.toString();
