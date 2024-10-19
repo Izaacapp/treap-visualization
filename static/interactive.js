@@ -123,8 +123,8 @@ const mouse = {
 };
 
 const panZoom = {
-    x: 0,
-    y: 0,
+    x: canvas.width / 2,
+    y: 100, // Fixed position for root node at the top center
     scale: 1,
 
     apply() {
@@ -157,16 +157,8 @@ const panZoom = {
         const scaleY = (canvasHeight - 2 * margin) / spaceHeight;
 
         this.scale = Math.min(scaleX, scaleY);
-        this.x = (canvasWidth - spaceWidth * this.scale) / 2;
-        this.y = (canvasHeight - spaceHeight * this.scale) / 2;
-    },
-
-    translateToCenter(space) {
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-
-        this.x = centerX - (space.w * this.scale) / 2;
-        this.y = centerY - (space.h * this.scale) / 2;
+        this.x = canvasWidth / 2;
+        this.y = 100;
     },
 };
 
@@ -241,7 +233,6 @@ function setTree(tree) {
     space = _space;
     currentTree = tree;
     panZoom.resetToFit(space);
-    panZoom.translateToCenter(space); // Center the tree within the canvas
 }
 
 function setRandomTree() {
@@ -287,12 +278,10 @@ function setPopupVisibility(x) {
 
 function increaseSize() {
     panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 1.1);
-    panZoom.translateToCenter(space);
 }
 
 function decreaseSize() {
     panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 0.9);
-    panZoom.translateToCenter(space);
 }
 
 setTree(currentTree);
