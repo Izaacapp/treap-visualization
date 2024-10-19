@@ -146,7 +146,7 @@ const panZoom = {
     },
 
     resetToFit(space) {
-        const margin = 200;
+        const margin = 400;
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
 
