@@ -1,6 +1,6 @@
-import {random_tree_with_n_nodes, tree_by_keys_and_values, delete_node} from "./decart-logic.js";
-import {tree_to_space} from "./transform-logic.js";
-import {GeometrySpace} from "./geometry-logic.js";
+import { random_tree_with_n_nodes, tree_by_keys_and_values, delete_node } from "./decart-logic.js";
+import { tree_to_space } from "./transform-logic.js";
+import { GeometrySpace } from "./geometry-logic.js";
 
 const SPEED_FACTOR = 2.4;
 const DEBUG = false;
@@ -162,7 +162,6 @@ const panZoom = {
     },
 
     translateToCenter(space) {
-        // Adjust the panning to center the entire diagram in the canvas
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
 
