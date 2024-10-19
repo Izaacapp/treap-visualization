@@ -1,6 +1,6 @@
-import { random_tree_with_n_nodes, tree_by_keys_and_values, delete_node } from "./decart-logic.js";
-import { tree_to_space } from "./transform-logic.js";
-import { GeometrySpace } from "./geometry-logic.js";
+import {random_tree_with_n_nodes, tree_by_keys_and_values, delete_node} from "./decart-logic.js";
+import {tree_to_space} from "./transform-logic.js";
+import {GeometrySpace} from "./geometry-logic.js";
 
 const SPEED_FACTOR = 2.4;
 const DEBUG = false;
@@ -123,8 +123,8 @@ const mouse = {
 };
 
 const panZoom = {
-    x: canvas.width / 2,
-    y: 100, // Fixed position for root node at the top center
+    x: 0,
+    y: 0,
     scale: 1,
 
     apply() {
@@ -157,53 +157,43 @@ const panZoom = {
         const scaleY = (canvasHeight - 2 * margin) / spaceHeight;
 
         this.scale = Math.min(scaleX, scaleY);
-        this.x = canvasWidth / 2;
-        this.y = 100;
+        this.x = (canvasWidth - spaceWidth * this.scale) / 2;
+        this.y = (canvasHeight - spaceHeight * this.scale) / 2;
+    },
+
+    translateToCenter(space) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        this.x = centerX - (space.w * this.scale) / 2;
+        this.y = centerY - (space.h * this.scale) / 2;
     },
 };
 
 let space = new GeometrySpace(0, 0);
 
 function draw_everything(thick_mode = false) {
-    {
-        ctx.fillStyle = "white";
-        let { x, y } = panZoom.toWorld(0, 0);
-        ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
-    }
+    ctx.fillStyle = "white";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    {
-        ctx.fillStyle = "black";
+    ctx.fillStyle = "black";
+    ctx.lineWidth = thick_mode ? 100 : 15;
 
-        if (thick_mode) {
-            ctx.lineWidth = 100;
-            for (let thing of space.content) {
-                if (thing.g_type === "line") {
-                    ctx.beginPath();
-                    ctx.moveTo(thing.x1, thing.y1);
-                    ctx.lineTo(thing.x2, thing.y2);
-                    ctx.stroke();
-                }
-            }
-        } else {
-            ctx.lineWidth = 15;
-
-            for (let thing of space.content) {
-                if (thing.g_type === "circle") {
-                    ctx.beginPath();
-                    ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                } else if (thing.g_type === "line") {
-                    ctx.beginPath();
-                    ctx.moveTo(thing.sx1, thing.sy1);
-                    ctx.lineTo(thing.sx2, thing.sy2);
-                    ctx.stroke();
-                } else if (thing.g_type === "text") {
-                    ctx.textAlign = thing.align;
-                    ctx.textBaseline = thing.baseline;
-                    ctx.font = `${thing.size}px monospace`;
-                    ctx.fillText(thing.text, thing.x, thing.y);
-                }
-            }
+    for (let thing of space.content) {
+        if (thing.g_type === "circle") {
+            ctx.beginPath();
+            ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        } else if (thing.g_type === "line") {
+            ctx.beginPath();
+            ctx.moveTo(thing.sx1, thing.sy1);
+            ctx.lineTo(thing.sx2, thing.sy2);
+            ctx.stroke();
+        } else if (thing.g_type === "text") {
+            ctx.textAlign = thing.align;
+            ctx.textBaseline = thing.baseline;
+            ctx.font = `${thing.size}px monospace`;
+            ctx.fillText(thing.text, thing.x, thing.y);
         }
     }
 
@@ -232,42 +222,8 @@ function setTree(tree) {
     let [_space, root] = tree_to_space(tree);
     space = _space;
     currentTree = tree;
-    adjustTreeLayout(space);
     panZoom.resetToFit(space);
-}
-
-function adjustTreeLayout(space) {
-    // Adjust the layout to keep lines neat and reduce excessive length
-    const MAX_LINE_LENGTH = 300; // Maximum allowed length for lines
-
-    space.content.forEach((thing) => {
-        if (thing.g_type === "line") {
-            const dx = thing.x2 - thing.x1;
-            const dy = thing.y2 - thing.y1;
-            const length = Math.hypot(dx, dy);
-            if (length > MAX_LINE_LENGTH) {
-                const ratio = MAX_LINE_LENGTH / length;
-                thing.x2 = thing.x1 + dx * ratio;
-                thing.y2 = thing.y1 + dy * ratio;
-            }
-        }
-    });
-
-    // Balance the left and right subtree layouts to make them even
-    const leftNodes = space.content.filter((thing) => thing.g_type === "circle" && thing.x < canvas.width / 2);
-    const rightNodes = space.content.filter((thing) => thing.g_type === "circle" && thing.x > canvas.width / 2);
-    const leftCount = leftNodes.length;
-    const rightCount = rightNodes.length;
-
-    if (leftCount > rightCount) {
-        rightNodes.forEach((node) => {
-            node.x += (leftCount - rightCount) * 20; // Adjust right side to make it even
-        });
-    } else if (rightCount > leftCount) {
-        leftNodes.forEach((node) => {
-            node.x -= (rightCount - leftCount) * 20; // Adjust left side to make it even
-        });
-    }
+    panZoom.translateToCenter(space);
 }
 
 function setRandomTree() {
@@ -313,10 +269,12 @@ function setPopupVisibility(x) {
 
 function increaseSize() {
     panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 1.1);
+    panZoom.translateToCenter(space);
 }
 
 function decreaseSize() {
     panZoom.scaleAt(canvas.width / 2, canvas.height / 2, 0.9);
+    panZoom.translateToCenter(space);
 }
 
 setTree(currentTree);
