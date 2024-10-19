@@ -48,8 +48,7 @@ const mouse = {
         event.preventDefault();
 
         if (mouse.drag) {
-            mouse.delta_x += event.movementX;
-            mouse.delta_y += event.movementY;
+            panZoom.panWithBounds(event.movementX * SPEED_FACTOR, event.movementY * SPEED_FACTOR);
         }
 
         mouse.prev_x = event.offsetX;
@@ -68,53 +67,12 @@ const mouse = {
         mouse.delta_y = 0;
         mouse.delta_scale = 0;
     },
-
-    handle_touch_down(event) {
-        event.preventDefault();
-
-        if (event.touches.length !== 1) {
-            return;
-        }
-        mouse.drag = true;
-        [mouse.prev_x, mouse.prev_y] = extractScreenPos(event);
-    },
-
-    handle_touch_up(event) {
-        event.preventDefault();
-
-        if (event.touches.length !== 0) {
-            return;
-        }
-        mouse.drag = false;
-    },
-
-    handle_touch_move(event) {
-        event.preventDefault();
-
-        if (event.touches.length !== 1) {
-            return;
-        }
-        if (mouse.drag) {
-            let pos = extractScreenPos(event);
-            mouse.delta_x += pos[0] - mouse.prev_x;
-            mouse.delta_y += pos[1] - mouse.prev_y;
-            [mouse.prev_x, mouse.prev_y] = pos;
-        }
-    },
-
+    
     update() {
         let changed = false;
         if (mouse.delta_scale) {
             panZoom.scaleAt(mouse.prev_x, mouse.prev_y, Math.exp(mouse.delta_scale / 1000));
             mouse.delta_scale = 0;
-            changed = true;
-        }
-
-        if (mouse.delta_x !== 0 || mouse.delta_y !== 0) {
-            panZoom.x += mouse.delta_x * SPEED_FACTOR;
-            panZoom.y += mouse.delta_y * SPEED_FACTOR;
-            mouse.delta_x = 0;
-            mouse.delta_y = 0;
             changed = true;
         }
 
@@ -126,7 +84,7 @@ const panZoom = {
     x: 0,
     y: 0,
     scale: 1,
-
+    
     apply() {
         ctx.setTransform(this.scale, 0, 0, this.scale, this.x, this.y);
     },
@@ -157,62 +115,64 @@ const panZoom = {
         const scaleY = (canvasHeight - 2 * margin) / spaceHeight;
 
         this.scale = Math.min(scaleX, scaleY);
+
         this.x = (canvasWidth - spaceWidth * this.scale) / 2;
         this.y = (canvasHeight - spaceHeight * this.scale) / 2;
     },
 
-    translateToCenter(space) {
-        // Adjust the panning to center the entire diagram in the canvas
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
+    // Ensure the tree diagram stays within canvas bounds
+    centerWithinBounds(space) {
+        const margin = 50;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
 
-        this.x = centerX - (space.w * this.scale) / 2;
-        this.y = centerY - (space.h * this.scale) / 2;
+        const spaceWidth = space.w * this.scale;
+        const spaceHeight = space.h * this.scale;
+
+        // Center the tree horizontally within the canvas
+        const centerX = canvasWidth / 2;
+        const centerY = canvasHeight / 2;
+
+        this.x = Math.max(margin, centerX - (spaceWidth / 2));
+        this.y = Math.max(margin, centerY - (spaceHeight / 2));
+    },
+
+    // Pan and zoom adjustments respecting the canvas bounds
+    panWithBounds(dx, dy) {
+        const margin = 50;
+        const maxX = canvas.width - space.w * this.scale - margin;
+        const maxY = canvas.height - space.h * this.scale - margin;
+
+        this.x = Math.max(margin, Math.min(this.x + dx, maxX));
+        this.y = Math.max(margin, Math.min(this.y + dy, maxY));
     },
 };
 
 let space = new GeometrySpace(0, 0);
 
 function draw_everything(thick_mode = false) {
-    {
-        ctx.fillStyle = "white";
-        let { x, y } = panZoom.toWorld(0, 0);
-        ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
-    }
+    ctx.fillStyle = "white";
+    let { x, y } = panZoom.toWorld(0, 0);
+    ctx.clearRect(x, y, canvas.width / panZoom.scale, canvas.height / panZoom.scale);
 
-    {
-        ctx.fillStyle = "black";
+    ctx.fillStyle = "black";
+    ctx.lineWidth = thick_mode ? 100 : 15;
 
-        if (thick_mode) {
-            ctx.lineWidth = 100;
-            for (let thing of space.content) {
-                if (thing.g_type === "line") {
-                    ctx.beginPath();
-                    ctx.moveTo(thing.x1, thing.y1);
-                    ctx.lineTo(thing.x2, thing.y2);
-                    ctx.stroke();
-                }
-            }
-        } else {
-            ctx.lineWidth = 15;
-
-            for (let thing of space.content) {
-                if (thing.g_type === "circle") {
-                    ctx.beginPath();
-                    ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                } else if (thing.g_type === "line") {
-                    ctx.beginPath();
-                    ctx.moveTo(thing.sx1, thing.sy1);
-                    ctx.lineTo(thing.sx2, thing.sy2);
-                    ctx.stroke();
-                } else if (thing.g_type === "text") {
-                    ctx.textAlign = thing.align;
-                    ctx.textBaseline = thing.baseline;
-                    ctx.font = `${thing.size}px monospace`;
-                    ctx.fillText(thing.text, thing.x, thing.y);
-                }
-            }
+    for (let thing of space.content) {
+        if (thing.g_type === "circle") {
+            ctx.beginPath();
+            ctx.arc(thing.x, thing.y, thing.radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        } else if (thing.g_type === "line") {
+            ctx.beginPath();
+            ctx.moveTo(thing.sx1, thing.sy1);
+            ctx.lineTo(thing.sx2, thing.sy2);
+            ctx.stroke();
+        } else if (thing.g_type === "text") {
+            ctx.textAlign = thing.align;
+            ctx.textBaseline = thing.baseline;
+            ctx.font = `${thing.size}px monospace`;
+            ctx.fillText(thing.text, thing.x, thing.y);
         }
     }
 
@@ -242,7 +202,7 @@ function setTree(tree) {
     space = _space;
     currentTree = tree;
     panZoom.resetToFit(space);
-    panZoom.translateToCenter(space); // Center the tree within the canvas
+    panZoom.centerWithinBounds(space); // Ensures it's centered within the bounds of the canvas
 }
 
 // Generate a balanced binary tree with n nodes
@@ -337,7 +297,6 @@ document.addEventListener("keypress", (event) => {
 decreaseButton.addEventListener("click", decreaseSize);
 document.addEventListener("keypress", (event) => {
     if (event.key === "-") decreaseSize();
-});
 
 showPopup.addEventListener("click", () => setPopupVisibility(true));
 closePopup.addEventListener("click", () => setPopupVisibility(false));
